@@ -25,6 +25,8 @@ class Kohana_Kostache extends Mustache
 		return new $class($template, $view, $partials);
 	}
 
+	protected $_template_path;
+
 	/**
 	 * KOstache class constructor.
 	 *
@@ -42,6 +44,15 @@ class Kohana_Kostache extends Mustache
 		parent::__construct($template, $view, $partials);
 
 		$this->_charset = Kohana::$charset;
+
+		// Look for a template file based on the class name
+		if ( ! $this->_template)
+		{
+			$parts = explode('_', get_class($this));
+			// Remove the View prefix
+			array_shift($parts);
+			$this->_template_path = strtolower(implode('/', $parts));
+		}
 	}
 
 	/**
@@ -120,23 +131,15 @@ class Kohana_Kostache extends Mustache
 	public function render($template = null, $view = null, $partials = null)
 	{
 		// Override the template location to match kohana's conventions
-		if ( ! $this->_template)
+		if ( $template === NULL AND ! $this->_template AND $this->_template_path)
 		{
-			$foo = explode('_', get_class($this));
-			array_shift($foo);
-			$view_location = strtolower(implode('/', $foo));
+			$path = Kohana::find_file('templates', $this->_template_path, 'mustache');
+
+			if ( ! $path)
+				throw new Kohana_Exception('Template file not found: templates/'.$this->_template_path);
+
+			$this->_template = file_get_contents($path);
 		}
-		else
-		{
-			$view_location = $this->_template;
-		}
-
-		$this->_template = Kohana::find_file('templates', $view_location, 'mustache');
-
-		if ( ! $this->_template AND ! $template)
-			throw new Kohana_Exception('Template file not found: templates/'.$view_location);
-
-		$this->_template = file_get_contents($this->_template);
 
 		// Convert partials to expanded template strings
 		foreach ($this->_partials as $key => $partial_template)
