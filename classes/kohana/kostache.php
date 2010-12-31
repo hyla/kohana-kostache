@@ -27,6 +27,10 @@ class Kohana_Kostache extends Mustache
 
 	protected $_template_path;
 
+	// Array of files Kohana will loop through and add to the _partials array
+	protected $_partial_paths = array();
+	protected $_partials_processed = FALSE;
+
 	/**
 	 * KOstache class constructor.
 	 *
@@ -141,13 +145,17 @@ class Kohana_Kostache extends Mustache
 			$this->_template = file_get_contents($path);
 		}
 
-		// Convert partials to expanded template strings
-		foreach ($this->_partials as $key => $partial_template)
+		if ( ! $this->_partials_processed)
 		{
-			if ($location = Kohana::find_file('templates', $partial_template, 'mustache'))
+			// Convert partials to expanded template strings
+			foreach ($this->_partial_paths as $key => $partial_template)
 			{
-				$this->_partials[$key] = file_get_contents($location);
+				if ($location = Kohana::find_file('templates', $partial_template, 'mustache'))
+				{
+					$this->_partials[$key] = file_get_contents($location);
+				}
 			}
+			$this->_partials_processed = TRUE;
 		}
 
 		return parent::render($template, $view, $partials);
