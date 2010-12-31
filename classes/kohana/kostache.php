@@ -126,7 +126,7 @@ class Kohana_Kostache extends Mustache
 		catch (Exception $e)
 		{
 			// Display the exception message
-			Kohana::exception_handler($e);
+			Kohana_Exception::handler($e);
 
 			return '';
 		}
